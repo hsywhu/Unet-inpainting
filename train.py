@@ -6,6 +6,7 @@ import torch.backends.cudnn as cudnn
 import matplotlib.pyplot as plt
 from PIL import Image
 from model import UNet
+from resnet import resNet
 from dataloader import DataLoader
 
 def train_net(net,
@@ -83,8 +84,6 @@ def train_net(net,
             pred = pred.permute(0, 2, 3, 1)
             im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
             im.save("sample/" + str(epoch + 1) + "_test_out.png")
-            if save_i == 0:
-                break
 
         if (epoch+1) % 10 == 0:
             torch.save(net.state_dict(), join(data_dir, 'checkpoints') + '/CP%d.pth' % (epoch + 1))
@@ -97,6 +96,7 @@ def get_args():
     parser.add_option('-d', '--data-dir', dest='data_dir', default='data', help='data directory')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=True, help='use cuda')
     parser.add_option('-l', '--load', dest='load', default=False, help='load file model')
+    parser.add_option('-n', '--network', dest='network', default='resNet', help='choose from UNet and resNet')
 
     (options, args) = parser.parse_args()
     return options
@@ -104,7 +104,10 @@ def get_args():
 if __name__ == '__main__':
     args = get_args()
 
-    net = UNet()
+    if args.network == 'UNet':
+        net = UNet()
+    elif args.network == 'resNet':
+        net = resNet()
 
     if args.load:
         net.load_state_dict(torch.load(args.load))

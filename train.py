@@ -1,16 +1,10 @@
-import sys
-import os
 from os.path import join
 from optparse import OptionParser
 import numpy as np
-
 import torch
 import torch.backends.cudnn as cudnn
-
 import matplotlib.pyplot as plt
 from PIL import Image
-
-# settings on windows/ubuntu
 from model import UNet
 from dataloader import DataLoader
 
@@ -20,12 +14,6 @@ def train_net(net,
               iteration=100,
               gpu=True):
     loader = DataLoader(data_dir, iteration=iteration)
-
- 
-    # optimizer = optim.SGD(net.parameters(),
-    #                       lr=lr,
-    #                       momentum=0.99,
-    #                       weight_decay=0.0005)
 
     optimizer = torch.optim.Adam(net.parameters())
     criterion = torch.nn.MSELoss()

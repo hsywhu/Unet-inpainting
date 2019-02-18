@@ -44,9 +44,6 @@ class DataLoader():
                 for i in range(5):
                     mask, data_image = self.__generateMask(mask, data_image)
 
-                # temp_image = Image.fromarray(data_image_)
-                # temp_image.show()
-
                 # origin_img_data = np.array(origin_img, dtype=np.float32)
                 # plt.subplot(1, 3, 1)
                 # plt.imshow(gt_img)
@@ -134,9 +131,3 @@ class DataLoader():
                 for k in range(3):
                     img[j, i, k] = 0
         return mask, img
-
-
-# loader = DataLoader()
-# loader.setMode('train')
-# for i, img in enumerate(loader):
-#     print(i, " ", img.shape)

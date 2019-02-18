@@ -3,10 +3,7 @@ from model import UNet
 import matplotlib.pyplot as plt
 import torch
 print("rendering")
-# displays test images with original and predicted masks after training
 data_dir='data/'
-# model_dir='data/cells/checkpoints/CP58.pth'
-# model_dir='data/aug/CP19_best_with_elastic.pth'
 model_dir='data/checkpoints/CP12.pth'
 
 gpu = True

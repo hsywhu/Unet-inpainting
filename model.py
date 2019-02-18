@@ -22,7 +22,6 @@ class UNet(nn.Module):
         self.up1 = upStep(1024, 512)
         self.up2 = upStep(512, 256)
         self.up3 = upStep(256, 128)
-        # self.up4 = upStep(128, 64, withReLU=False)
         self.up4 = upStep(128, 64)
 
     def forward(self, x):

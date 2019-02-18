@@ -6,25 +6,16 @@ import numpy as np
 
 import torch
 import torch.backends.cudnn as cudnn
-import torch.nn as nn
-import torch.nn.functional as F
-from torch import optim
-
-from torchvision import transforms
 
 import matplotlib.pyplot as plt
-
-# settings on mac
-# from Unet.model import UNet
-# from Unet.dataloader import DataLoader
+from PIL import Image
 
 # settings on windows/ubuntu
 from model import UNet
-# from unet import UNet
 from dataloader import DataLoader
 
 def train_net(net,
-              epochs=5,
+              epochs=100,
               data_dir="data",
               iteration=100,
               gpu=True):
@@ -47,57 +38,74 @@ def train_net(net,
 
         epoch_loss = 0
 
-        for i, img in enumerate(loader):
+        for i, (img, gt) in enumerate(loader):
             # output image size: (N, H, W, C)
             img_tensor = torch.from_numpy(img).float()
+            gt_tensor = torch.from_numpy(gt).float()
             # turn image tensor from (N, H, W, C) to (N, C, H, W)
             img_tensor = img_tensor.permute(0, 3, 1, 2)
-
+            gt_tensor = gt_tensor.permute(0, 3, 1, 2)
             if gpu:
                 img_tensor = img_tensor.cuda()
+                gt_tensor = gt_tensor.cuda()
 
             pred = net(img_tensor)
-            img_gt = img_tensor[:, :3, :, :]
-            loss = criterion(pred, img_gt)
+            loss = criterion(pred, gt_tensor)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             epoch_loss += loss.item()
- 
-            print('Training sample %d / %d - Loss: %.6f' % (i+1, iteration, loss.item()))
+            if i % 20 == 0:
+                print('Training sample %d / %d - Loss: %.6f' % (i+1, iteration, loss.item()))
 
-            # optimize weights
+        # save train_groundtruth, train_input, train_output, test_groundtruth, test_input, test_output to samples folder
+        for save_i, (img, gt) in enumerate(loader):
+            # output image size: (N, H, W, C)
+            im = Image.fromarray(np.uint8(gt[0, :, :, :].squeeze() * 255))
+            im.save("sample/" + str(epoch + 1) + "_train_gt.png")
+            im = Image.fromarray(np.uint8(img[0, :, :, :3].squeeze() * 255))
+            im.save("sample/" + str(epoch + 1) + "_train_in.png")
 
-        torch.save(net.state_dict(), join(data_dir, 'checkpoints') + '/CP%d.pth' % (epoch + 1))
-        print('Checkpoint %d saved !' % (epoch + 1))
+            img_tensor = torch.from_numpy(img).float()
+            img_tensor = img_tensor.permute(0, 3, 1, 2)
+            if gpu:
+                img_tensor = img_tensor.cuda()
+            pred = net(img_tensor)
+            pred = pred.permute(0, 2, 3, 1)
+            im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
+            im.save("sample/" + str(epoch + 1) + "_train_out.png")
+            if save_i == 0:
+                break
+        net.eval()
+        loader.setMode('test')
+        for _, (img, gt) in enumerate(loader):
+            # output image size: (N, H, W, C)
+            im = Image.fromarray(np.uint8(gt[0, :, :, :].squeeze() * 255))
+            im.save("sample/" + str(epoch + 1) + "_test_gt.png")
+            im = Image.fromarray(np.uint8(img[0, :, :, :3].squeeze() * 255))
+            im.save("sample/" + str(epoch + 1) + "_test_in.png")
+
+            img_tensor = torch.from_numpy(img).float()
+            img_tensor = img_tensor.permute(0, 3, 1, 2)
+            if gpu:
+                img_tensor = img_tensor.cuda()
+            pred = net(img_tensor)
+            pred = pred.permute(0, 2, 3, 1)
+            im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
+            im.save("sample/" + str(epoch + 1) + "_test_out.png")
+            if save_i == 0:
+                break
+
+        if (epoch+1) % 10 == 0:
+            torch.save(net.state_dict(), join(data_dir, 'checkpoints') + '/CP%d.pth' % (epoch + 1))
+            print('Checkpoint %d saved !' % (epoch + 1))
         print('Epoch %d finished! - Loss: %.6f' % (epoch+1, epoch_loss / i))
-
-    # displays test images with original and predicted masks after training
-    # loader.setMode('test')
-    # net.eval()
-    # with torch.no_grad():
-    #     for _, (img, label, origin_img) in enumerate(loader):
-    #         shape = img.shape
-    #         img_torch = torch.from_numpy(img.reshape(1,1,shape[0],shape[1])).float()
-    #         if gpu:
-    #             img_torch = img_torch.cuda()
-    #         pred = net(img_torch)
-    #         pred_sm = softmax(pred)
-    #         _,pred_label = torch.max(pred_sm,1)
-    #
-    #         plt.subplot(1, 3, 1)
-    #         plt.imshow(origin_img)
-    #         plt.subplot(1, 3, 2)
-    #         plt.imshow((label-1)*255.)
-    #         plt.subplot(1, 3, 3)
-    #         plt.imshow(pred_label.cpu().detach().numpy().squeeze()*255.)
-    #         plt.show()
     
 def get_args():
     parser = OptionParser()
-    parser.add_option('-e', '--epochs', dest='epochs', default=5, type='int', help='number of epochs')
+    parser.add_option('-e', '--epochs', dest='epochs', default=100, type='int', help='number of epochs')
     parser.add_option('-d', '--data-dir', dest='data_dir', default='data', help='data directory')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=True, help='use cuda')
     parser.add_option('-l', '--load', dest='load', default=False, help='load file model')

@@ -60,9 +60,9 @@ class downStep(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
-        x = self.BN(x)
+        # x = self.BN(x)
         x = F.relu(self.conv2(x))
-        x = self.BN(x)
+        # x = self.BN(x)
         return x
 
 class upStep(nn.Module):
@@ -80,9 +80,9 @@ class upStep(nn.Module):
         x = torch.cat([x, x_down], 1)
         if self.withReLU:
             x = F.relu(self.conv1(x))
-            x = self.BN(x)
+            # x = self.BN(x)
             x = F.relu(self.conv2(x))
-            x = self.BN(x)
+            # x = self.BN(x)
         else:
             x = self.conv1(x)
             # x = self.BN(x)

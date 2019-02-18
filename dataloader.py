@@ -23,12 +23,12 @@ class DataLoader():
 
         while current < endId:
             data_image_array = []
+            gt_array = []
             for i_itr in range(self.batch_size):
                 if self.mode == 'train':
                     img = Image.open(join(self.root_dir, "train.png"))
                 else:
                     img = Image.open(join(self.root_dir, "test.png"))
-                origin_img = np.array(img, dtype=np.float32)
 
                 if self.mode == 'train':
                     img= self.__applyDataAugmentation(img)
@@ -36,17 +36,20 @@ class DataLoader():
                     # todo: add data augmentation for test case
                     img= self.__applyDataAugmentation(img)
 
+                gt_img = np.array(img, dtype=np.float32) / 255
+                gt_array.append(gt_img)
+
                 data_image = np.array(img, dtype=np.float32)
                 mask = np.ones(self.input_size)
                 for i in range(5):
-                    mask = self.__generateMask(mask)
+                    mask, data_image = self.__generateMask(mask, data_image)
 
                 # temp_image = Image.fromarray(data_image_)
                 # temp_image.show()
 
                 # origin_img_data = np.array(origin_img, dtype=np.float32)
                 # plt.subplot(1, 3, 1)
-                # plt.imshow(origin_img/255)
+                # plt.imshow(gt_img)
                 # plt.subplot(1, 3, 2)
                 # plt.imshow(data_image/255)
                 # plt.subplot(1, 3, 3)
@@ -63,7 +66,8 @@ class DataLoader():
 
             current += 1
             data_image_np_array = np.array(data_image_array)
-            yield (data_image_np_array)
+            gt_np_array = np.array(gt_array)
+            yield (data_image_np_array, gt_np_array)
 
     def setMode(self, mode):
         self.mode = mode
@@ -114,7 +118,7 @@ class DataLoader():
         randomCrop = transforms.RandomCrop(self.input_size)
         return randomCrop(img)
 
-    def __generateMask(self, mask):
+    def __generateMask(self, mask, img):
         if random.random() > 0.5:
             # 8x64 rectangle
             mask_w = 8
@@ -127,7 +131,9 @@ class DataLoader():
         for i in range(start_w, start_w+mask_w):
             for j in range(start_h, start_h+mask_h):
                 mask[j, i] = 0
-        return mask
+                for k in range(3):
+                    img[j, i, k] = 0
+        return mask, img
 
 
 # loader = DataLoader()

@@ -50,40 +50,41 @@ def train_net(net,
                 print('Training sample %d / %d - Loss: %.6f' % (i+1, iteration, loss.item()))
 
         # save train_groundtruth, train_input, train_output, test_groundtruth, test_input, test_output to samples folder
-        for save_i, (img, gt) in enumerate(loader):
-            # output image size: (N, H, W, C)
-            im = Image.fromarray(np.uint8(gt[0, :, :, :].squeeze() * 255))
-            im.save("sample/" + str(epoch + 1) + "_train_gt.png")
-            im = Image.fromarray(np.uint8(img[0, :, :, :3].squeeze() * 255))
-            im.save("sample/" + str(epoch + 1) + "_train_in.png")
+        with torch.no_grad():
+            for save_i, (img, gt) in enumerate(loader):
+                # output image size: (N, H, W, C)
+                im = Image.fromarray(np.uint8(gt[0, :, :, :].squeeze() * 255))
+                im.save("sample/" + str(epoch + 1) + "_train_gt.png")
+                im = Image.fromarray(np.uint8(img[0, :, :, :3].squeeze() * 255))
+                im.save("sample/" + str(epoch + 1) + "_train_in.png")
 
-            img_tensor = torch.from_numpy(img).float()
-            img_tensor = img_tensor.permute(0, 3, 1, 2)
-            if gpu:
-                img_tensor = img_tensor.cuda()
-            pred = net(img_tensor)
-            pred = pred.permute(0, 2, 3, 1)
-            im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
-            im.save("sample/" + str(epoch + 1) + "_train_out.png")
-            if save_i == 0:
-                break
-        net.eval()
-        loader.setMode('test')
-        for _, (img, gt) in enumerate(loader):
-            # output image size: (N, H, W, C)
-            im = Image.fromarray(np.uint8(gt[0, :, :, :].squeeze() * 255))
-            im.save("sample/" + str(epoch + 1) + "_test_gt.png")
-            im = Image.fromarray(np.uint8(img[0, :, :, :3].squeeze() * 255))
-            im.save("sample/" + str(epoch + 1) + "_test_in.png")
+                img_tensor = torch.from_numpy(img).float()
+                img_tensor = img_tensor.permute(0, 3, 1, 2)
+                if gpu:
+                    img_tensor = img_tensor.cuda()
+                pred = net(img_tensor)
+                pred = pred.permute(0, 2, 3, 1)
+                im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
+                im.save("sample/" + str(epoch + 1) + "_train_out.png")
+                if save_i == 0:
+                    break
+            net.eval()
+            loader.setMode('test')
+            for _, (img, gt) in enumerate(loader):
+                # output image size: (N, H, W, C)
+                im = Image.fromarray(np.uint8(gt[0, :, :, :].squeeze() * 255))
+                im.save("sample/" + str(epoch + 1) + "_test_gt.png")
+                im = Image.fromarray(np.uint8(img[0, :, :, :3].squeeze() * 255))
+                im.save("sample/" + str(epoch + 1) + "_test_in.png")
 
-            img_tensor = torch.from_numpy(img).float()
-            img_tensor = img_tensor.permute(0, 3, 1, 2)
-            if gpu:
-                img_tensor = img_tensor.cuda()
-            pred = net(img_tensor)
-            pred = pred.permute(0, 2, 3, 1)
-            im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
-            im.save("sample/" + str(epoch + 1) + "_test_out.png")
+                img_tensor = torch.from_numpy(img).float()
+                img_tensor = img_tensor.permute(0, 3, 1, 2)
+                if gpu:
+                    img_tensor = img_tensor.cuda()
+                pred = net(img_tensor)
+                pred = pred.permute(0, 2, 3, 1)
+                im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
+                im.save("sample/" + str(epoch + 1) + "_test_out.png")
 
         if (epoch+1) % 10 == 0:
             torch.save(net.state_dict(), join(data_dir, 'checkpoints') + '/CP%d.pth' % (epoch + 1))

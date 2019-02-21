@@ -34,7 +34,7 @@ class DataLoader():
                     img= self.__applyDataAugmentation(img)
                 else:
                     # todo: add data augmentation for test case
-                    img= self.__applyDataAugmentation(img)
+                    img= self.__applyDataAugmentation_test(img)
 
                 gt_img = np.array(img, dtype=np.float32) / 255
                 gt_array.append(gt_img)
@@ -82,6 +82,11 @@ class DataLoader():
         img = self.__randomCrop(img)
         return img
 
+    def __applyDataAugmentation_test(self, img):
+        img = self.__randomResizing(img)
+        img = self.__randomCrop(img)
+        return img
+
     def __horizontalFlip(self, img):
         horizontalFlip = transforms.RandomHorizontalFlip(p=1.0)
         return horizontalFlip(img)
@@ -92,13 +97,13 @@ class DataLoader():
 
     def __colorJitter(self, img):
         # todo: decide parameter
-        colorJitter = transforms.ColorJitter()  # parameter undecided
+        colorJitter = transforms.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.1, hue=0.1)  # parameter undecided
         return colorJitter(img)
 
     def __rotate(self, img):
         # todo: decide random angle
-        angle = 15 * random.random()
-        return transforms.functional.rotate(img, angle)
+        rotation = transforms.RandomRotation(degrees=20, expand=True)
+        return rotation(img)
 
     def __randomResizing(self, img):
         w, h = img.size

@@ -86,7 +86,7 @@ def train_net(net,
                 im = Image.fromarray(np.uint8(pred.cpu().detach().numpy()[0, :, :, :].squeeze() * 255))
                 im.save("sample/" + str(epoch + 1) + "_test_out.png")
 
-        if (epoch+1) % 10 == 0:
+        if (epoch+1) % 20 == 0:
             torch.save(net.state_dict(), join(data_dir, 'checkpoints') + '/CP%d.pth' % (epoch + 1))
             print('Checkpoint %d saved !' % (epoch + 1))
         print('Epoch %d finished! - Loss: %.6f' % (epoch+1, epoch_loss / i))

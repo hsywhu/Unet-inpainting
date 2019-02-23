@@ -48,7 +48,8 @@ class resBlock(nn.Module):
         self.s_conv1 = nn.Conv2d(inchannel, outchannel, 3, stride=1, padding=0, bias=False)
         self.d_conv1 = nn.Conv2d(inchannel, outchannel, 3, stride=2, padding=0, bias=False)
         self.u_conv1 = nn.ConvTranspose2d(inchannel, outchannel, 3, stride=2, padding=3, output_padding=1, bias=False)     # padding unsure (2 or 3)
-        self.BN = nn.modules.BatchNorm2d(outchannel)
+        self.BN1 = nn.modules.BatchNorm2d(outchannel, track_running_stats=False)
+        self.BN2 = nn.modules.BatchNorm2d(outchannel, track_running_stats=False)
         self.ReLU = nn.ReLU()
         self.conv2 = nn.Conv2d(outchannel, outchannel, 3, stride=1, padding=0, bias=False)
         self.d_shortcut = nn.Conv2d(inchannel, outchannel, 1, stride=2, padding=0, bias=False)
@@ -65,11 +66,11 @@ class resBlock(nn.Module):
             out = self.d_conv1(out)
         elif (not self.downsample) and self.upsample:         # upsample
             out = self.u_conv1(out)
-        out = self.BN(out)
+        out = self.BN1(out)
         out = self.ReLU(out)
         out = self.reflect_padding(out)
         out = self.conv2(out)
-        out = self.BN(out)
+        out = self.BN2(out)
         if self.downsample and (not self.upsample):         # downsample
             x = self.d_shortcut(x)
         elif (not self.downsample) and self.upsample:         # upsample
